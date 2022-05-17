@@ -1,0 +1,3 @@
+port=15000
+bufferSize=20
+logServer=false
