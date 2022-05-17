@@ -1,6 +1,8 @@
 package commands;
 
-public class UserListCommand implements Message{
+import java.io.Serializable;
+
+public class UserListCommand implements Message, Serializable {
     private String command;
     private String text;
     private int ID;

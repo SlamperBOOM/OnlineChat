@@ -1,9 +1,6 @@
 package server.server;
 
-import commands.ExitMessage;
-import commands.Message;
-import commands.NewClient;
-import commands.TextMessage;
+import commands.*;
 import server.server.threads.ClientThread;
 import server.server.threads.ConnectionThread;
 
@@ -93,6 +90,20 @@ public class Server {
                 break;
             }
             case "userList" : {
+                StringBuilder userNicknames = new StringBuilder();
+                synchronized (clients){
+                    for(ClientInfo client:clients){
+                        userNicknames.append(client.getNickname()).append("\n");
+                    }
+                    userNicknames.deleteCharAt(userNicknames.length()-1);
+                    System.out.println(OwnDateGetter.getDate() + ": User <" +
+                            clients.get(message.getSenderID()).getNickname() + "> asked user list");
+                }
+                sendMessage(new UserListCommand(userNicknames.toString(), -1), message.getSenderID());
+                break;
+            }
+            default:{
+                sendMessage(new ErrorMessage("Wrong command"), message.getSenderID());
                 break;
             }
         }

@@ -4,12 +4,14 @@ import client.UI.UI;
 import commands.ExitMessage;
 import commands.Message;
 import commands.NewClient;
+import commands.UserListCommand;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Client {
@@ -54,6 +56,7 @@ public class Client {
                 socket.close();
                 outputToServer.close();
                 inputFromServer.close();
+                isConnected = false;
             } catch (IOException | NullPointerException e) {
                 e.printStackTrace();
             }
@@ -63,6 +66,14 @@ public class Client {
     private void sendNickname(){
         try {
             outputToServer.writeObject(new NewClient(nickname, ID));
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    public void askUserList(){
+        try {
+            outputToServer.writeObject(new UserListCommand("", ID));
         }catch (IOException e){
             e.printStackTrace();
         }
@@ -96,6 +107,13 @@ public class Client {
             case "message" : {
                 chat.add(message.getText());
                 ui.updateChat(chat);
+                break;
+            }
+            case "userList":{
+                List<String> users;
+                String text = message.getText();
+                users = Arrays.asList(text.split("\n"));
+                ui.showUsers(users);
                 break;
             }
             case "exit" : {
