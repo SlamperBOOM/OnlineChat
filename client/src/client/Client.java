@@ -1,10 +1,11 @@
 package client.client;
 
 import client.UI.UI;
+import client.client.commands.ClientCommand;
 import commands.ExitMessage;
 import commands.Message;
 import commands.NewClient;
-import commands.UserListCommand;
+import commands.UserList;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -14,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class Client {
+public class Client implements ClientData{
     private ObjectOutputStream outputToServer;
     private ObjectInputStream inputFromServer;
     private Socket socket;
@@ -63,7 +64,7 @@ public class Client {
         }
     }
 
-    private void sendNickname(){
+    public void sendNickname(){
         try {
             outputToServer.writeObject(new NewClient(nickname, ID));
         }catch (IOException e){
@@ -73,7 +74,7 @@ public class Client {
 
     public void askUserList(){
         try {
-            outputToServer.writeObject(new UserListCommand("", ID));
+            outputToServer.writeObject(new UserList("", ID));
         }catch (IOException e){
             e.printStackTrace();
         }
@@ -90,46 +91,12 @@ public class Client {
     }
 
     public void receiveMessage(Message message){
-        switch (message.getCommand()){
-            case "login" : {
-                try {
-                    ID = Integer.parseInt(message.getText());
-                }catch (NumberFormatException e){
-                    e.printStackTrace();
-                    return;
-                }
-                if(!isConnected) {
-                    sendNickname();
-                    isConnected = true;
-                }
-                break;
-            }
-            case "message" : {
-                chat.add(message.getText());
-                ui.updateChat(chat);
-                break;
-            }
-            case "userList":{
-                List<String> users;
-                String text = message.getText();
-                users = Arrays.asList(text.split("\n"));
-                ui.showUsers(users);
-                break;
-            }
-            case "exit" : {
-                chat.add("You was disconnected from server");
-                ui.updateChat(chat);
-                try {
-                    socket.close();
-                    outputToServer.close();
-                    inputFromServer.close();
-                    listener.setStopped();
-                }catch (IOException e){
-                    e.printStackTrace();
-                }
-                isConnected = false;
-                break;
-            }
+        try {
+            String className = "client.client." + message.getClass().getName() + "Command";
+            ClientCommand command = (ClientCommand) Class.forName(className).newInstance();
+            command.doCommand(this, this, message);
+        }catch (ClassNotFoundException | IllegalAccessException | InstantiationException e){
+            e.printStackTrace();
         }
     }
 
@@ -139,5 +106,48 @@ public class Client {
 
     public int getID() {
         return ID;
+    }
+
+    @Override
+    public void setConnected() {
+        isConnected = true;
+    }
+
+    @Override
+    public String getNickname() {
+        return nickname;
+    }
+
+    @Override
+    public List<String> getChat() {
+        return chat;
+    }
+
+    @Override
+    public UI getUI() {
+        return ui;
+    }
+
+    @Override
+    public boolean isConnected() {
+        return isConnected;
+    }
+
+    @Override
+    public void closeSocket() {
+        try {
+            socket.close();
+            outputToServer.close();
+            inputFromServer.close();
+            listener.setStopped();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        isConnected = false;
+    }
+
+    @Override
+    public void setID(int ID) {
+        this.ID = ID;
     }
 }

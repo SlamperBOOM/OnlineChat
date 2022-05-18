@@ -2,7 +2,6 @@ package client.UI;
 
 import client.client.Client;
 import commands.TextMessage;
-import commands.UserListCommand;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -95,6 +94,11 @@ public class UserInterface implements UI, DocumentListener, ActionListener {
         UserListDialog dialog = new UserListDialog(window);
         dialog.createDialogView(users);
         dialog.showDialog();
+    }
+
+    @Override
+    public void showMessage(String text) {
+        JOptionPane.showMessageDialog(window, text, "Error", JOptionPane.INFORMATION_MESSAGE);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package server.server;
 
 import commands.*;
+import server.server.commands.ServerCommand;
 import server.server.threads.ClientThread;
 import server.server.threads.ConnectionThread;
 
@@ -8,7 +9,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-public class Server {
+public class Server implements ServerData{
     private Properties config;
     private List<String> chat;
     private final List<ClientInfo> clients;
@@ -41,71 +42,13 @@ public class Server {
     }
 
     public synchronized void receiveMessage(Message message){
-        switch (message.getCommand()){
-            case "login" : {
-                    int ID = message.getSenderID();
-                    String nickname = message.getText();
-                    synchronized (clients) {
-                        clients.get(ID).setNickname(nickname);
-                    }
-                    String messageText = OwnDateGetter.getDate() + ": User <" + nickname + "> entered the chat!";
-                    broadcastMessage(new TextMessage(messageText, -1), ID);
-
-                    chat.add(messageText);
-                    int lowBorderOfChat = chat.size()-Integer.parseInt(config.get("bufferSize").toString());
-                    if(lowBorderOfChat < 0) lowBorderOfChat = 0;
-                    for(int i = lowBorderOfChat;
-                        i < chat.size(); ++i){
-                        sendMessage(new TextMessage(chat.get(i), -1), ID);
-                    }
-                    System.out.println(messageText);
-                    break;
-            }
-            case "message" : {
-                String messageText;
-                synchronized (clients) {
-                    messageText = OwnDateGetter.getDate() + ": <" + clients.get(message.getSenderID()).getNickname()
-                            + ">: " + message.getText();
-                    chat.add(messageText);
-                    System.out.println(OwnDateGetter.getDate()+ ": Received message from client " + message.getSenderID() +
-                            " <" + clients.get(message.getSenderID()).getNickname()+ ">");
-                }
-                broadcastMessage(new TextMessage(messageText, -1), message.getSenderID());
-                break;
-            }
-            case "exit" : {
-                int ID = message.getSenderID();
-                ClientInfo client;
-
-                synchronized (clients){
-                    client = clients.remove(ID);
-                    for(int i=ID; i<clients.size(); ++i){
-                        sendMessage(new NewClient(String.valueOf(i), -1), i);
-                    }
-                }
-                client.stop();
-                String messageText = OwnDateGetter.getDate()+ ": User <" + client.getNickname() + "> left the chat";
-                System.out.println(messageText);
-                broadcastMessage(new TextMessage(messageText, -1), -1);
-                break;
-            }
-            case "userList" : {
-                StringBuilder userNicknames = new StringBuilder();
-                synchronized (clients){
-                    for(ClientInfo client:clients){
-                        userNicknames.append(client.getNickname()).append("\n");
-                    }
-                    userNicknames.deleteCharAt(userNicknames.length()-1);
-                    System.out.println(OwnDateGetter.getDate() + ": User <" +
-                            clients.get(message.getSenderID()).getNickname() + "> asked user list");
-                }
-                sendMessage(new UserListCommand(userNicknames.toString(), -1), message.getSenderID());
-                break;
-            }
-            default:{
-                sendMessage(new ErrorMessage("Wrong command"), message.getSenderID());
-                break;
-            }
+        try {
+            String className = "server.server." + message.getClass().getName() + "Command";
+            ServerCommand command = (ServerCommand) Class.forName(className).newInstance();
+            command.doCommand(this, this, message);
+        }catch (ClassNotFoundException | IllegalAccessException | InstantiationException e){
+            System.out.println(OwnDateGetter.getDate() + ": Got wrong command from client " + message.getSenderID());
+            sendMessage(new ErrorMessage("Wrong command"), message.getSenderID());
         }
     }
 
@@ -114,14 +57,14 @@ public class Server {
         thread.start();
         int ID;
         synchronized (clients){
-            clients.add(new ClientInfo("", thread));
-            ID = clients.size() - 1;
+            ID = clients.size();
+            clients.add(new ClientInfo("", thread, ID));
         }
         System.out.println(OwnDateGetter.getDate()+ ": Client " + ID + " initiated connection");
         sendMessage(new NewClient(String.valueOf(ID), -1), ID);
     }
 
-    private synchronized void sendMessage(Message message, int ID) {
+    public synchronized void sendMessage(Message message, int ID) {
         ClientInfo client;
         synchronized (clients){
             client = clients.get(ID);
@@ -135,7 +78,7 @@ public class Server {
         }
     }
 
-    private void broadcastMessage(Message message, int exceptID){
+    public void broadcastMessage(Message message, int exceptID){
         synchronized (clients){
             for(int i=0; i<clients.size(); ++i){
                 if(i!=exceptID) {
@@ -143,5 +86,20 @@ public class Server {
                 }
             }
         }
+    }
+
+    @Override
+    public int getLowBorder() {
+        return Integer.parseInt(config.get("bufferSize").toString());
+    }
+
+    @Override
+    public List<String> getChat() {
+        return chat;
+    }
+
+    @Override
+    public List<ClientInfo> getClients() {
+        return clients;
     }
 }

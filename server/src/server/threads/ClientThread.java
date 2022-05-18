@@ -1,5 +1,6 @@
 package server.server.threads;
 
+import commands.ExitMessage;
 import commands.Message;
 import server.server.Server;
 
@@ -13,6 +14,8 @@ public class ClientThread extends Thread{
     private Socket socket;
     private ObjectInputStream inputFromClient;
     private ObjectOutputStream outputToClient;
+    private int timeoutCount = 0;
+    private int ID;
 
     private boolean isRunning = true;
 
@@ -21,10 +24,6 @@ public class ClientThread extends Thread{
         this.socket = socket;
         try {
             socket.setSoTimeout(1000);
-        }catch (SocketException e){
-            e.printStackTrace();
-        }
-        try {
             inputFromClient = new ObjectInputStream(socket.getInputStream());
             outputToClient = new ObjectOutputStream(socket.getOutputStream());
         }catch (IOException e){
@@ -38,14 +37,19 @@ public class ClientThread extends Thread{
         while (isRunning){
             try{
                 message = (Message) inputFromClient.readObject();
-            }catch (SocketTimeoutException e){
-                continue;
-            }catch (ClassNotFoundException | IOException e){
-                e.printStackTrace();
+            }catch (ClassNotFoundException | SocketTimeoutException e){
+                message = null;
+            }catch (IOException e){
+               server.receiveMessage(new ExitMessage(ID));
             }
+            timeoutCount++;
             if(message != null){
                 server.receiveMessage(message);
                 message = null;
+                timeoutCount = 0;
+            }
+            if(timeoutCount == 60){
+                server.receiveMessage(new ExitMessage(ID));
             }
         }
         try{
@@ -55,6 +59,10 @@ public class ClientThread extends Thread{
         }catch (IOException e){
             e.printStackTrace();
         }
+    }
+
+    public void setID(int ID) {
+        this.ID = ID;
     }
 
     public void sendMessage(Message message){
