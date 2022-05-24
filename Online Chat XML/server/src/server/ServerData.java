@@ -1,7 +1,5 @@
 package server;
 
-import server.commands.Clients;
-
 import java.util.List;
 import java.util.Properties;
 

@@ -2,7 +2,6 @@ package server;
 
 import org.w3c.dom.Element;
 import server.commands.BlocksGetter.ErrorMessageBlocks;
-import server.commands.Clients;
 import server.commands.ServerCommand;
 import server.threads.ClientThread;
 import server.threads.ConnectionThread;
