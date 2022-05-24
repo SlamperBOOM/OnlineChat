@@ -1,0 +1,5 @@
+list=server.commands.UserListCommand
+message=server.commands.MessageCommand
+login=server.commands.UserLoginCommand
+logout=server.commands.UserLogoutCommand
+command=server.commands.CommandCommand

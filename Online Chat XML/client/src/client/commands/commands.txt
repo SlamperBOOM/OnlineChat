@@ -1,0 +1,9 @@
+success=client.commands.SuccessCommand
+error=client.commands.ErrorCommand
+event=client.commands.EventCommand
+listusers=client.commands.UserListCommand
+message=client.commands.MessageCommand
+userlogin=client.commands.UserLoginCommand
+userlogout=client.commands.UserLogoutCommand
+session=client.commands.SessionCommand
+command=client.commands.CommandCommand
