@@ -4,9 +4,9 @@ Also if you want to put value in block, put "value" and "*value*".
 
 With this rules, if you want to get xml file like this:
 <?xml version="1.0"?>
-<success name=yes>
+<success name="yes">
 	<session>25</session>
 </success>
 
-Your list of String should look like
+Your list of String should look like:
 "success", "attr", "name", "yes", "session", "value", "25", "/session", "/success"
