@@ -31,7 +31,11 @@ public class Server implements ServerData{
         }
         clients = new Clients();
         chat = new ArrayList<>();
-        logger = new ServerLogger();
+        if(config.get("logServer").toString().equals("true")) {
+            logger = new ServerLogger(true);
+        }else{
+            logger = new ServerLogger(false);
+        }
         connectionThread = new ConnectionThread(Integer.parseInt(config.get("port").toString()), this);
         System.out.println("Server started at port " + Integer.parseInt(config.get("port").toString()));
     }
@@ -43,6 +47,7 @@ public class Server implements ServerData{
     public void stop(){
         clients.stop();
         connectionThread.setStopped();
+        logger.close();
         System.out.println("Give me a few seconds to finish");
     }
 
@@ -53,7 +58,7 @@ public class Server implements ServerData{
             command.doCommand(this, this, message);
         }catch (ClassNotFoundException | IllegalAccessException | InstantiationException e){
             Element elem = (Element) message.getParsedXMLFile().getElementsByTagName("command").item(0);
-            System.out.println(OwnDateGetter.getDate() + ": Got wrong command from client " +
+            logger.logEvent("Got wrong command from client " +
                     elem.getElementsByTagName("session").item(0).getNodeValue());
             Message errorMessage = new Message();
             errorMessage.getXMLFromString(ErrorMessageBlocks.getBlocks("Wrong command"));
@@ -69,7 +74,7 @@ public class Server implements ServerData{
             ID = clients.getNextID();
             clients.addClient(new ClientInfo("", thread, ID));
         }
-        System.out.println(OwnDateGetter.getDate()+ ": Client " + ID + " initiated connection");
+        logger.logEvent("Client " + ID + " initiated connection");
     }
 
     public synchronized void sendMessage(Message message, int ID) {

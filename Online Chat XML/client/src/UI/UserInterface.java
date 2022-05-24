@@ -76,9 +76,9 @@ public class UserInterface implements UI, DocumentListener, ActionListener {
     public void sendMessage(String message){
         Message mes = client.createMessage("message message " + message + " /message session " + client.getID());
         ClientCommand command = new CommandCommand();
+        command.doCommand(client, client, mes);
         client.getChat().add(OwnDateGetter.getDate()+": <You>: "+message);
         updateChat(client.getChat());
-        command.doCommand(client, client, mes);
     }
 
     public void exit(){

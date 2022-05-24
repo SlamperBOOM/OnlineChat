@@ -26,7 +26,7 @@ public class MessageCommand implements ServerCommand{
         messageToEveryone.getXMLFromString(blocks);
         data.getChat().add(new ChatItem(blocks));
         server.broadcastMessage(messageToEveryone, senderID);
-        System.out.println(OwnDateGetter.getDate() + ": Received message from client "+senderID);
+        data.getLogger().logEvent("Received message from client "+senderID);
 
         Message successMessage = new Message();
         successMessage.getXMLFromString(SuccessCommandBlocks.getBlocks());
