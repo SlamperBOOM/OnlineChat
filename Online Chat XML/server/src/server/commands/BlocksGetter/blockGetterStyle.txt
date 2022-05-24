@@ -1,0 +1,12 @@
+"blocks" in BlocksGetter classes should look like XML, but without "<>".
+If you want to add attribute to block, put "attr" and "*attr name*" + "*attr value*". Parser in Message.java will transform this into correct xml form.
+Also if you want to put value in block, put "value" and "*value*".
+
+With this rules, if you want to get xml file like this:
+<?xml version="1.0"?>
+<success name=yes>
+	<session>25</session>
+</success>
+
+Your list of String should look like
+"success", "attr", "name", "yes", "session", "value", "25", "/session", "/success"
